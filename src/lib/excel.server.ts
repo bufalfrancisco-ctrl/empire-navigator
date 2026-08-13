@@ -1,7 +1,7 @@
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/microsoft_excel";
 
 /** Workbook that holds the boost values, stored in the connected OneDrive root. */
-export const WORKBOOK_PATH = "Book 4.xlsx";
+export const WORKBOOK_PATH = "FOE Database.xlsx";
 
 async function graph(path: string) {
   const lovableKey = process.env["LOVABLE_API_KEY"];
@@ -20,19 +20,28 @@ async function graph(path: string) {
     console.error(`Excel gateway request failed [${response.status}]: ${body}`);
     throw new Error(`Excel request failed [${response.status}]: ${body}`);
   }
-  return response.json() as Promise<{ values?: unknown[][] }>;
+  return response.json() as Promise<{ values?: unknown[][]; value?: { name: string }[] }>;
+}
+
+async function firstSheetName() {
+  const data = await graph(`/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets?$select=name`);
+  const name = data.value?.[0]?.name;
+  if (!name) throw new Error(`No worksheets found in "${WORKBOOK_PATH}"`);
+  return name;
 }
 
 /**
  * Reads the used range of one worksheet and returns its raw cell values.
+ * When `sheetName` is omitted the workbook's first sheet is used.
  * Expected sheet layout (row 1 = headers):
  *   A: marker (none | flag | pyramid | medal)
  *   B: attacking attack, C: attacking defense
  *   D: defending attack, E: defending defense
  */
-export async function readSheetValues(sheetName: string) {
+export async function readSheetValues(sheetName?: string) {
+  const sheet = sheetName ?? (await firstSheetName());
   const data = await graph(
-    `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${sheetName}')/usedRange(valuesOnly=true)?$select=values`,
+    `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${sheet}')/usedRange(valuesOnly=true)?$select=values`,
   );
   return data.values ?? [];
 }
