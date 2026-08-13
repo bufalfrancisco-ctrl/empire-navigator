@@ -84,8 +84,9 @@ function Index() {
           <BattleBoosts rows={rows} />
           {usingFallback && (
             <p className="px-2 text-center text-xs text-muted-foreground">
-              Showing example values — add a "BattleBoosts" sheet to "Book 4.xlsx" in your
-              OneDrive (columns: marker, attack, defense, attack, defense) to go live.
+              Showing example values — fill the first sheet of "FOE Database.xlsx" in your
+              OneDrive (row 1 = headers; columns: marker, attack, defense, attack, defense) to
+              go live.
             </p>
           )}
         </>
