@@ -13,14 +13,15 @@ export function ModeSelector({
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const programmatic = useRef(false);
+  const mounted = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const index = MODES.findIndex((m) => m.id === value);
-    if (Math.round(el.scrollTop / ITEM_H) === index) return;
     programmatic.current = true;
-    el.scrollTo({ top: index * ITEM_H, behavior: "smooth" });
+    el.scrollTo({ top: index * ITEM_H, behavior: mounted.current ? "smooth" : "auto" });
+    mounted.current = true;
     setTimeout(() => (programmatic.current = false), 400);
   }, [value]);
 
