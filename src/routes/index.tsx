@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import { BattleBoosts } from "@/components/BattleBoosts";
 import { ModeSelector } from "@/components/ModeSelector";
 import { battleBoostRows, player, type BoostMode } from "@/lib/boostData";
+import { getBattleBoosts } from "@/lib/boosts.functions";
 import battleBoostImg from "@/assets/mode-battle-boost.png";
 import greatBuildingsImg from "@/assets/mode-great-buildings.png";
 import dailyProductionImg from "@/assets/mode-daily-production.png";
@@ -40,6 +43,16 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [mode, setMode] = useState<BoostMode>("battle-boosts");
   const image = MODE_IMAGES[mode];
+  const fetchBoosts = useServerFn(getBattleBoosts);
+  const { data } = useQuery({
+    queryKey: ["battle-boosts"],
+    queryFn: () => fetchBoosts({}),
+    staleTime: 60_000,
+  });
+
+  const liveRows = data?.rows ?? [];
+  const rows = liveRows.length > 0 ? liveRows : battleBoostRows;
+  const usingFallback = liveRows.length === 0;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 p-4">
@@ -66,7 +79,17 @@ function Index() {
 
       <ModeSelector value={mode} onChange={setMode} />
 
-      {mode === "battle-boosts" && <BattleBoosts rows={battleBoostRows} />}
+      {mode === "battle-boosts" && (
+        <>
+          <BattleBoosts rows={rows} />
+          {usingFallback && (
+            <p className="px-2 text-center text-xs text-muted-foreground">
+              Showing example values — add a "BattleBoosts" sheet to "Book 4.xlsx" in your
+              OneDrive (columns: marker, attack, defense, attack, defense) to go live.
+            </p>
+          )}
+        </>
+      )}
 
       {mode !== "battle-boosts" && (
         <section className="glass-panel rounded-2xl p-6 text-center text-sm text-muted-foreground">
