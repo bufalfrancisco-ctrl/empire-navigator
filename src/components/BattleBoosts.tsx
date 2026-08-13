@@ -1,20 +1,44 @@
-import { Flag, Landmark, Medal, Shield, Swords } from "lucide-react";
+import { Swords } from "lucide-react";
 import type { BoostRow } from "@/lib/boostData";
 
 function Marker({ marker }: { marker: BoostRow["marker"] }) {
-  if (marker === "none") return <div className="h-8 w-8" />;
-  const Icon = marker === "flag" ? Flag : marker === "pyramid" ? Landmark : Medal;
+  if (marker === "none") return <div className="h-7 w-7" />;
+  const glyph = marker === "flag" ? "🎏" : marker === "pyramid" ? "🏛" : "🏅";
   return (
-    <div className="flex h-8 w-8 items-center justify-center rounded-lg glass-inset">
-      <Icon className="h-4 w-4 text-primary" />
+    <div className="flex h-7 w-7 items-center justify-center text-xl leading-none">
+      <span aria-hidden>{glyph}</span>
     </div>
   );
 }
 
-function Value({ value }: { value: number | null }) {
+/** Crossed swords laid over a colored shield, as in the game UI. */
+function BoostIcon({ tone }: { tone: "atk" | "def" }) {
+  const fill = tone === "atk" ? "var(--atk)" : "var(--def)";
   return (
-    <span className="w-12 text-right font-semibold tabular-nums text-foreground">
-      {value === null ? "-" : value.toLocaleString("it-IT")}
+    <span className="relative inline-flex h-6 w-6 shrink-0 items-center justify-center">
+      <svg viewBox="0 0 24 24" className="h-6 w-6">
+        <path
+          d="M12 2.5 20 5v7.2c0 4.4-3.2 7.7-8 9.3-4.8-1.6-8-4.9-8-9.3V5l8-2.5Z"
+          fill={fill}
+        />
+      </svg>
+      <Swords
+        className="absolute h-4 w-4 text-foreground"
+        style={{ transform: "translate(-2px,-1px)" }}
+        strokeWidth={2.5}
+      />
+    </span>
+  );
+}
+
+function Value({ value, align }: { value: number | null; align: "left" | "right" }) {
+  return (
+    <span
+      className={`w-14 font-bold tabular-nums text-foreground ${
+        align === "right" ? "text-right" : "text-left"
+      }`}
+    >
+      {value === null ? "-" : value}
     </span>
   );
 }
@@ -28,38 +52,25 @@ function Pair({
   def: number | null;
   tone: "atk" | "def";
 }) {
-  const color = tone === "atk" ? "text-atk" : "text-def";
   return (
-    <div className="flex items-center gap-1.5">
-      <Value value={atk} />
-      <Swords className={`h-4 w-4 ${color}`} />
-      <Shield className={`h-4 w-4 ${color}`} />
-      <span className="w-12 text-left font-semibold tabular-nums text-foreground">
-        {def === null ? "-" : def.toLocaleString("it-IT")}
-      </span>
+    <div className="flex items-center gap-2">
+      <Value value={atk} align="right" />
+      <BoostIcon tone={tone} />
+      <Value value={def} align="left" />
     </div>
   );
 }
 
 export function BattleBoosts({ rows }: { rows: BoostRow[] }) {
   return (
-    <section className="glass-panel rounded-2xl p-4">
-      <div className="mb-3 flex items-center justify-between px-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-        <span>Attacking army</span>
-        <span>Defending army</span>
-      </div>
-      <div className="space-y-2">
-        {rows.map((row, i) => (
-          <div
-            key={i}
-            className="flex items-center justify-between gap-2 rounded-xl px-2 py-2 transition-colors hover:bg-accent/30"
-          >
-            <Pair atk={row.attAtk} def={row.attDef} tone="atk" />
-            <Marker marker={row.marker} />
-            <Pair atk={row.defAtk} def={row.defDef} tone="def" />
-          </div>
-        ))}
-      </div>
+    <section className="space-y-2 pt-3">
+      {rows.map((row, i) => (
+        <div key={i} className="flex items-center justify-center gap-6">
+          <Pair atk={row.attAtk} def={row.attDef} tone="atk" />
+          <Marker marker={row.marker} />
+          <Pair atk={row.defAtk} def={row.defDef} tone="def" />
+        </div>
+      ))}
     </section>
   );
 }
