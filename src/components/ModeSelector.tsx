@@ -42,7 +42,7 @@ export function ModeSelector({
   return (
     <div className="relative select-none">
       <div
-        className="pointer-events-none absolute inset-x-0 top-1/2 z-10 h-10 -translate-y-1/2 glass-inset rounded-xl ring-1 ring-primary/30"
+        className="pointer-events-none absolute inset-x-0 top-1/2 h-10 -translate-y-1/2 bg-[oklch(0.12_0.04_268)]"
         aria-hidden
       />
       <div
@@ -62,10 +62,10 @@ export function ModeSelector({
               role="option"
               aria-selected={active}
               onClick={() => onChange(mode.id)}
-              className={`flex h-10 w-full snap-center items-center justify-center text-display text-lg font-bold transition-all duration-200 ${
+              className={`relative flex h-10 w-full snap-center items-center justify-center font-bold transition-all duration-200 ${
                 active
-                  ? "scale-105 text-foreground drop-shadow-[0_0_12px_oklch(0.82_0.15_85_/_45%)]"
-                  : "scale-95 text-muted-foreground/70"
+                  ? "text-xl text-foreground"
+                  : "text-base text-foreground/85"
               }`}
             >
               {mode.label}
@@ -73,8 +73,6 @@ export function ModeSelector({
           );
         })}
       </div>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-background/80 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background/80 to-transparent" />
     </div>
   );
 }

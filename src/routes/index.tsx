@@ -55,24 +55,24 @@ function Index() {
   const usingFallback = liveRows.length === 0;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 p-4">
+    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 p-4">
       <header className="flex items-center gap-4">
-        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl glass-panel p-0.5">
+        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border-2 border-primary/70">
           <img
             key={mode}
             src={image.src}
             alt={image.alt}
-            className="h-full w-full rounded-[10px] object-cover animate-in fade-in duration-300"
+            className="h-full w-full rounded-[8px] object-cover animate-in fade-in duration-300"
           />
         </div>
         <div className="min-w-0">
-          <h1 className="flex items-center gap-2 truncate text-display text-2xl font-bold">
+          <h1 className="flex items-center gap-2 truncate text-2xl font-bold">
             {player.name}
-            <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <ChevronDown className="h-5 w-5 shrink-0" strokeWidth={3} />
           </h1>
-          <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+          <p className="mt-1 flex items-center gap-2 text-lg">
             {player.age}
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-5 w-5" strokeWidth={3} />
           </p>
         </div>
       </header>
@@ -93,7 +93,7 @@ function Index() {
       )}
 
       {mode !== "battle-boosts" && (
-        <section className="glass-panel rounded-2xl p-6 text-center text-sm text-muted-foreground">
+        <section className="p-6 text-center text-sm text-muted-foreground">
           {image.alt} section coming next.
         </section>
       )}
