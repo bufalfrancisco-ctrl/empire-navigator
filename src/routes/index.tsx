@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronDown } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, Sheet } from "lucide-react";
 import { useState } from "react";
 
 import { BattleBoosts } from "@/components/BattleBoosts";
 import { DailyProduction } from "@/components/DailyProduction";
 import { GreatBuildings } from "@/components/GreatBuildings";
+import { InsertBuilding } from "@/components/InsertBuilding";
 import { ModeSelector } from "@/components/ModeSelector";
-import { player, type BoostMode } from "@/lib/boostData";
-import { getBoostData } from "@/lib/boosts.functions";
+import { player, WORKBOOK_URL, type BoostMode } from "@/lib/boostData";
+import { addBuilding, getBoostData } from "@/lib/boosts.functions";
 import battleBoostImg from "@/assets/mode-battle-boost.png";
 import greatBuildingsImg from "@/assets/mode-great-buildings.png";
 import dailyProductionImg from "@/assets/mode-daily-production.png";
@@ -18,6 +19,7 @@ const MODE_IMAGES: Record<BoostMode, { src: string; alt: string }> = {
   "great-buildings": { src: greatBuildingsImg, alt: "Great Buildings" },
   "battle-boosts": { src: battleBoostImg, alt: "Battle Boost" },
   "daily-production": { src: dailyProductionImg, alt: "Daily Boost" },
+  "insert-building": { src: greatBuildingsImg, alt: "Insert Building" },
 };
 
 export const Route = createFileRoute("/")({
@@ -46,10 +48,22 @@ function Index() {
   const [mode, setMode] = useState<BoostMode>("battle-boosts");
   const image = MODE_IMAGES[mode];
   const fetchBoosts = useServerFn(getBoostData);
+  const submitBuilding = useServerFn(addBuilding);
+  const queryClient = useQueryClient();
+  const [message, setMessage] = useState<string | null>(null);
   const { data, isPending } = useQuery({
     queryKey: ["boost-data"],
     queryFn: () => fetchBoosts({}),
     staleTime: 60_000,
+  });
+  const addMutation = useMutation({
+    mutationFn: (input: { name: string; level: number | null }) =>
+      submitBuilding({ data: input }),
+    onSuccess: async (result, input) => {
+      setMessage(result.ok ? `${input.name} added to the database.` : result.error);
+      if (result.ok) await queryClient.invalidateQueries({ queryKey: ["boost-data"] });
+    },
+    onError: (error: Error) => setMessage(error.message),
   });
   const bonus = data?.productionBonus ?? 0;
 
@@ -102,11 +116,34 @@ function Index() {
             <GreatBuildings buildings={data?.greatBuildings ?? []} bonus={bonus} />
           )}
 
+          {mode === "insert-building" && (
+            <InsertBuilding
+              catalog={data?.catalog ?? []}
+              pending={addMutation.isPending}
+              message={message}
+              onAdd={(name, level) => {
+                setMessage(null);
+                addMutation.mutate({ name, level });
+              }}
+            />
+          )}
+
           {data?.error && (
             <p className="px-2 text-center text-xs text-destructive">{data.error}</p>
           )}
         </>
       )}
+
+      <a
+        href={WORKBOOK_URL}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Open the FOE Database spreadsheet"
+        title="Open FOE Database"
+        className="fixed bottom-4 left-4 z-20 flex h-11 w-11 items-center justify-center rounded-xl border border-primary/40 bg-secondary/70 shadow-[0_0_18px_-2px_oklch(0.72_0.17_150/0.65)] backdrop-blur-md transition-transform hover:scale-105"
+      >
+        <Sheet className="h-6 w-6" style={{ color: "oklch(0.72 0.17 150)" }} strokeWidth={2.5} />
+      </a>
     </main>
   );
 }
