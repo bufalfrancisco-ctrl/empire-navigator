@@ -51,7 +51,7 @@ export async function resolveSheet(wanted: string, fallbackToFirst = false) {
  */
 export async function readSheetValues(sheetName: string) {
   const data = await graph(
-    `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${sheet}')/usedRange(valuesOnly=true)?$select=values`,
+    `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${sheetName}')/usedRange(valuesOnly=true)?$select=values`,
   );
   return data.values ?? [];
 }
