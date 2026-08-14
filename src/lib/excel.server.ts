@@ -3,24 +3,33 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/microsoft_excel";
 /** Workbook that holds the boost values, stored in the connected OneDrive root. */
 export const WORKBOOK_PATH = "FOE Database.xlsx";
 
-async function graph(path: string) {
+async function graph(path: string, init?: { method?: string; body?: unknown }) {
   const lovableKey = process.env["LOVABLE_API_KEY"];
   const connectionKey = process.env["MICROSOFT_EXCEL_API_KEY"];
   if (!lovableKey) throw new Error("LOVABLE_API_KEY is not configured");
   if (!connectionKey) throw new Error("MICROSOFT_EXCEL_API_KEY is not configured");
 
   const response = await fetch(`${GATEWAY_URL}${path}`, {
+    method: init?.method ?? "GET",
     headers: {
       Authorization: `Bearer ${lovableKey}`,
       "X-Connection-Api-Key": connectionKey,
+      "Content-Type": "application/json",
     },
+    ...(init?.body === undefined ? {} : { body: JSON.stringify(init.body) }),
   });
   if (!response.ok) {
     const body = await response.text();
     console.error(`Excel gateway request failed [${response.status}]: ${body}`);
     throw new Error(`Excel request failed [${response.status}]: ${body}`);
   }
-  return response.json() as Promise<{ values?: unknown[][]; value?: { name: string }[] }>;
+  return response.json() as Promise<{
+    values?: unknown[][];
+    value?: { name: string }[];
+    address?: string;
+    rowCount?: number;
+    columnCount?: number;
+  }>;
 }
 
 export async function sheetNames() {
