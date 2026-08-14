@@ -20,6 +20,41 @@ export type PlayerInfo = {
   age: string;
 };
 
+/** One resource / fragment line of the Daily Production screen. */
+export type DailyItem = {
+  label: string;
+  amount: number | null;
+  /** true when the item is a fragment (shown with the puzzle badge) */
+  fragment: boolean;
+};
+
+/** One Great Building with its current level and production bonus. */
+export type GreatBuilding = {
+  name: string;
+  level: number | null;
+  /** production bonus in percent contributed by this building */
+  bonus: number | null;
+};
+
+/** Worksheet names read from "FOE Database.xlsx". */
+export const SHEETS = {
+  battleBoosts: "Battle Boosts",
+  dailyProduction: "Daily Production",
+  greatBuildings: "Great Buildings",
+} as const;
+
+export function formatAmount(value: number | null): string {
+  if (value === null) return "-";
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `${trim(value / 1_000_000)}M`;
+  if (abs >= 10_000) return `${trim(value / 1000)}K`;
+  return new Intl.NumberFormat("it-IT").format(value);
+}
+
+function trim(value: number) {
+  return value.toFixed(1).replace(/\.0$/, "");
+}
+
 /**
  * Placeholder values. These are shaped exactly like the rows that will come
  * from the linked Excel (Microsoft 365) sheet, so swapping the source out is

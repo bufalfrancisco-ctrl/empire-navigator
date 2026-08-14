@@ -23,11 +23,22 @@ async function graph(path: string) {
   return response.json() as Promise<{ values?: unknown[][]; value?: { name: string }[] }>;
 }
 
-async function firstSheetName() {
+export async function sheetNames() {
   const data = await graph(`/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets?$select=name`);
-  const name = data.value?.[0]?.name;
-  if (!name) throw new Error(`No worksheets found in "${WORKBOOK_PATH}"`);
-  return name;
+  const names = (data.value ?? []).map((sheet) => sheet.name);
+  if (names.length === 0) throw new Error(`No worksheets found in "${WORKBOOK_PATH}"`);
+  return names;
+}
+
+/**
+ * Resolves a wanted sheet name case-insensitively; falls back to the first
+ * sheet only when `fallbackToFirst` is set.
+ */
+export async function resolveSheet(wanted: string, fallbackToFirst = false) {
+  const names = await sheetNames();
+  const match = names.find((n) => n.trim().toLowerCase() === wanted.trim().toLowerCase());
+  if (match) return match;
+  return fallbackToFirst ? names[0]! : null;
 }
 
 /**
@@ -38,10 +49,9 @@ async function firstSheetName() {
  *   B: attacking attack, C: attacking defense
  *   D: defending attack, E: defending defense
  */
-export async function readSheetValues(sheetName?: string) {
-  const sheet = sheetName ?? (await firstSheetName());
+export async function readSheetValues(sheetName: string) {
   const data = await graph(
-    `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${sheet}')/usedRange(valuesOnly=true)?$select=values`,
+    `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${sheetName}')/usedRange(valuesOnly=true)?$select=values`,
   );
   return data.values ?? [];
 }
