@@ -64,3 +64,23 @@ export async function readSheetValues(sheetName: string) {
   );
   return data.values ?? [];
 }
+
+/** Appends one row of values below the used range of a worksheet. */
+export async function appendRow(sheetName: string, values: (string | number | null)[]) {
+  const used = await graph(
+    `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${sheetName}')/usedRange(valuesOnly=true)?$select=address,values`,
+  );
+  const address = used.address ?? "";
+  const lastPart = address.split("!")[1]?.split(":").pop() ?? "A1";
+  const lastRow = Number(lastPart.replace(/[^\d]/g, "")) || 1;
+  const isEmpty = (used.values ?? []).every((row) =>
+    row.every((cell) => String(cell ?? "").trim() === ""),
+  );
+  const row = isEmpty ? lastRow : lastRow + 1;
+  const endColumn = String.fromCharCode(65 + Math.max(values.length - 1, 0));
+  await graph(
+    `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${sheetName}')/range(address='A${row}:${endColumn}${row}')`,
+    { method: "PATCH", body: { values: [values] } },
+  );
+  return row;
+}
