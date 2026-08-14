@@ -1,4 +1,4 @@
-import type { BoostRow, DailyItem, GreatBuilding } from "@/lib/boostData";
+import type { BoostRow, CatalogBuilding, DailyItem, GreatBuilding } from "@/lib/boostData";
 
 const MARKERS: BoostRow["marker"][] = ["none", "flag", "pyramid", "medal"];
 
@@ -70,4 +70,26 @@ export function productionBonus(buildings: GreatBuilding[]): number {
     (total, b) => total + (b.bonus ?? (b.level ?? 0)),
     0,
   );
+}
+
+const YES = ["fragment", "frammento", "yes", "si", "sì", "true", "x", "1"];
+
+/**
+ * Columns of the "DATABASE" sheet:
+ * A name, B level, C bonus %, D att.atk, E att.def, F def.atk, G def.def,
+ * H produced item, I amount, J fragment flag.
+ */
+export function parseCatalog(values: unknown[][]): CatalogBuilding[] {
+  return rows(values).map((row) => ({
+    name: String(row[0] ?? "").trim(),
+    level: num(row[1]),
+    bonus: num(row[2]),
+    attAtk: num(row[3]),
+    attDef: num(row[4]),
+    defAtk: num(row[5]),
+    defDef: num(row[6]),
+    item: String(row[7] ?? "").trim(),
+    amount: num(row[8]),
+    fragment: YES.includes(String(row[9] ?? "").trim().toLowerCase()),
+  }));
 }

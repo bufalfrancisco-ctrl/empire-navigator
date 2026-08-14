@@ -1,10 +1,19 @@
-export type BoostMode = "great-buildings" | "battle-boosts" | "daily-production";
+export type BoostMode =
+  | "great-buildings"
+  | "battle-boosts"
+  | "daily-production"
+  | "insert-building";
 
 export const MODES: { id: BoostMode; label: string }[] = [
   { id: "great-buildings", label: "Great Buildings" },
   { id: "battle-boosts", label: "Battle Boosts" },
   { id: "daily-production", label: "Daily Production" },
+  { id: "insert-building", label: "Insert Building" },
 ];
+
+/** Direct link to the linked workbook (Excel per il Web). */
+export const WORKBOOK_URL =
+  "https://collegiorotondi-my.sharepoint.com/personal/bufalo_francesco_collegiorotondi_it/_layouts/15/Doc.aspx?sourcedoc=%7B2501553D-FE1E-4506-8A6F-0BD1862580B4%7D&file=FOE%20Database.xlsx&action=default&mobileredirect=true";
 
 export type BoostRow = {
   /** middle marker: none | flag | pyramid | medal */
@@ -38,10 +47,28 @@ export type GreatBuilding = {
 
 /** Worksheet names read from "FOE Database.xlsx". */
 export const SHEETS = {
-  battleBoosts: "Battle Boosts",
-  dailyProduction: "Daily Production",
-  greatBuildings: "Great Buildings",
+  battleBoosts: "BATTLE BOOST",
+  dailyProduction: "DAILY PRODUCTION",
+  greatBuildings: "GREAT BUILDINGS",
+  database: "DATABASE",
 } as const;
+
+/**
+ * One row of the "DATABASE" catalog sheet: a building plus every buff it grants.
+ * Columns: A name, B level, C bonus %, D-G battle boosts, H item, I amount, J fragment.
+ */
+export type CatalogBuilding = {
+  name: string;
+  level: number | null;
+  bonus: number | null;
+  attAtk: number | null;
+  attDef: number | null;
+  defAtk: number | null;
+  defDef: number | null;
+  item: string;
+  amount: number | null;
+  fragment: boolean;
+};
 
 export function formatAmount(value: number | null): string {
   if (value === null) return "-";
