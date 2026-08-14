@@ -5,9 +5,11 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import { BattleBoosts } from "@/components/BattleBoosts";
+import { DailyProduction } from "@/components/DailyProduction";
+import { GreatBuildings } from "@/components/GreatBuildings";
 import { ModeSelector } from "@/components/ModeSelector";
-import { battleBoostRows, player, type BoostMode } from "@/lib/boostData";
-import { getBattleBoosts } from "@/lib/boosts.functions";
+import { player, type BoostMode } from "@/lib/boostData";
+import { getBoostData } from "@/lib/boosts.functions";
 import battleBoostImg from "@/assets/mode-battle-boost.png";
 import greatBuildingsImg from "@/assets/mode-great-buildings.png";
 import dailyProductionImg from "@/assets/mode-daily-production.png";
@@ -43,16 +45,13 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [mode, setMode] = useState<BoostMode>("battle-boosts");
   const image = MODE_IMAGES[mode];
-  const fetchBoosts = useServerFn(getBattleBoosts);
-  const { data } = useQuery({
-    queryKey: ["battle-boosts"],
+  const fetchBoosts = useServerFn(getBoostData);
+  const { data, isPending } = useQuery({
+    queryKey: ["boost-data"],
     queryFn: () => fetchBoosts({}),
     staleTime: 60_000,
   });
-
-  const liveRows = data?.rows ?? [];
-  const rows = liveRows.length > 0 ? liveRows : battleBoostRows;
-  const usingFallback = liveRows.length === 0;
+  const bonus = data?.productionBonus ?? 0;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-3 p-4">
@@ -79,23 +78,34 @@ function Index() {
 
       <ModeSelector value={mode} onChange={setMode} />
 
-      {mode === "battle-boosts" && (
+      {isPending ? (
+        <p className="px-2 py-8 text-center text-sm text-muted-foreground">
+          Loading your values…
+        </p>
+      ) : (
         <>
-          <BattleBoosts rows={rows} />
-          {usingFallback && (
-            <p className="px-2 text-center text-xs text-muted-foreground">
-              Showing example values — fill the first sheet of "FOE Database.xlsx" in your
-              OneDrive (row 1 = headers; columns: marker, attack, defense, attack, defense) to
-              go live.
-            </p>
+          {mode === "battle-boosts" &&
+            (data && data.battleRows.length > 0 ? (
+              <BattleBoosts rows={data.battleRows} />
+            ) : (
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                No Battle Boost values found in FOE Database.xlsx (row 1 = headers; columns:
+                marker, attack, defense, attack, defense).
+              </p>
+            ))}
+
+          {mode === "daily-production" && (
+            <DailyProduction items={data?.dailyItems ?? []} bonus={bonus} />
+          )}
+
+          {mode === "great-buildings" && (
+            <GreatBuildings buildings={data?.greatBuildings ?? []} bonus={bonus} />
+          )}
+
+          {data?.error && (
+            <p className="px-2 text-center text-xs text-destructive">{data.error}</p>
           )}
         </>
-      )}
-
-      {mode !== "battle-boosts" && (
-        <section className="p-6 text-center text-sm text-muted-foreground">
-          {image.alt} section coming next.
-        </section>
       )}
     </main>
   );
