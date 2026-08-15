@@ -51,7 +51,43 @@ export const SHEETS = {
   dailyProduction: "DAILY PRODUCTION",
   greatBuildings: "GREAT BUILDINGS",
   database: "DATABASE",
+  myBuildings: "MY BUILDINGS",
 } as const;
+
+/** The 24 Forge of Empires eras, used by the era scroller. */
+export const ERAS = [
+  "Bronze Age",
+  "Iron Age",
+  "Early Middle Ages",
+  "High Middle Ages",
+  "Late Middle Ages",
+  "Colonial Age",
+  "Industrial Age",
+  "Progressive Era",
+  "Modern Era",
+  "Postmodern Era",
+  "Contemporary Era",
+  "Tomorrow Era",
+  "The Future",
+  "Arctic Future",
+  "Oceanic Future",
+  "Virtual Future",
+  "Space Age Mars",
+  "Space Age Asteroid Belt",
+  "Space Age Venus",
+  "Space Age Jupiter Moon",
+  "Space Age Titan",
+  "Space Age Space Hub",
+  "Mars Colony",
+  "Beyond",
+] as const;
+
+/** One building the player owns: name + era + how many copies. */
+export type MyBuilding = {
+  name: string;
+  era: string;
+  quantity: number | null;
+};
 
 /**
  * One row of the "DATABASE" catalog sheet: a building plus every buff it grants.
