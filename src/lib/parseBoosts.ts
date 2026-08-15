@@ -1,4 +1,10 @@
-import type { BoostRow, CatalogBuilding, DailyItem, GreatBuilding } from "@/lib/boostData";
+import type {
+  BoostRow,
+  CatalogBuilding,
+  DailyItem,
+  GreatBuilding,
+  MyBuilding,
+} from "@/lib/boostData";
 
 const MARKERS: BoostRow["marker"][] = ["none", "flag", "pyramid", "medal"];
 
@@ -91,5 +97,14 @@ export function parseCatalog(values: unknown[][]): CatalogBuilding[] {
     item: String(row[7] ?? "").trim(),
     amount: num(row[8]),
     fragment: YES.includes(String(row[9] ?? "").trim().toLowerCase()),
+  }));
+}
+
+/** Columns of the "MY BUILDINGS" sheet: A name, B era, C quantity. */
+export function parseMyBuildings(values: unknown[][]): MyBuilding[] {
+  return rows(values).map((row) => ({
+    name: String(row[0] ?? "").trim(),
+    era: String(row[1] ?? "").trim(),
+    quantity: num(row[2]),
   }));
 }
