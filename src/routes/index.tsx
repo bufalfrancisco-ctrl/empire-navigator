@@ -10,7 +10,7 @@ import { GreatBuildings } from "@/components/GreatBuildings";
 import { InsertBuilding } from "@/components/InsertBuilding";
 import { ModeSelector } from "@/components/ModeSelector";
 import { player, WORKBOOK_URL, type BoostMode } from "@/lib/boostData";
-import { addBuilding, getBoostData } from "@/lib/boosts.functions";
+import { addOwnedBuilding, getBoostData, saveGreatBuildingLevel } from "@/lib/boosts.functions";
 import battleBoostImg from "@/assets/mode-battle-boost.png";
 import greatBuildingsImg from "@/assets/mode-great-buildings.png";
 import dailyProductionImg from "@/assets/mode-daily-production.png";
@@ -48,7 +48,8 @@ function Index() {
   const [mode, setMode] = useState<BoostMode>("battle-boosts");
   const image = MODE_IMAGES[mode];
   const fetchBoosts = useServerFn(getBoostData);
-  const submitBuilding = useServerFn(addBuilding);
+  const submitBuilding = useServerFn(addOwnedBuilding);
+  const submitLevel = useServerFn(saveGreatBuildingLevel);
   const queryClient = useQueryClient();
   const [message, setMessage] = useState<string | null>(null);
   const { data, isPending } = useQuery({
@@ -57,13 +58,19 @@ function Index() {
     staleTime: 60_000,
   });
   const addMutation = useMutation({
-    mutationFn: (input: { name: string; level: number | null }) =>
+    mutationFn: (input: { name: string; era: string; quantity: number }) =>
       submitBuilding({ data: input }),
     onSuccess: async (result, input) => {
       setMessage(result.ok ? `${input.name} added to the database.` : result.error);
       if (result.ok) await queryClient.invalidateQueries({ queryKey: ["boost-data"] });
     },
     onError: (error: Error) => setMessage(error.message),
+  });
+  const levelMutation = useMutation({
+    mutationFn: (input: { name: string; level: number | null }) => submitLevel({ data: input }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["boost-data"] });
+    },
   });
   const bonus = data?.productionBonus ?? 0;
 
@@ -113,17 +120,24 @@ function Index() {
           )}
 
           {mode === "great-buildings" && (
-            <GreatBuildings buildings={data?.greatBuildings ?? []} bonus={bonus} />
+            <GreatBuildings
+              buildings={data?.greatBuildings ?? []}
+              bonus={bonus}
+              catalog={data?.catalog ?? []}
+              pending={levelMutation.isPending}
+              onSetLevel={(name, level) => levelMutation.mutate({ name, level })}
+            />
           )}
 
           {mode === "insert-building" && (
             <InsertBuilding
               catalog={data?.catalog ?? []}
+              owned={data?.myBuildings ?? []}
               pending={addMutation.isPending}
               message={message}
-              onAdd={(name, level) => {
+              onAdd={(name, era, quantity) => {
                 setMessage(null);
-                addMutation.mutate({ name, level });
+                addMutation.mutate({ name, era, quantity });
               }}
             />
           )}
