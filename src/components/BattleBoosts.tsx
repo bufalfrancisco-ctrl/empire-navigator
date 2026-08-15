@@ -1,8 +1,15 @@
 import { Swords } from "lucide-react";
 import type { BoostRow } from "@/lib/boostData";
 
+/** Which battle context each workbook marker stands for. */
+const CONTEXT: Record<BoostRow["marker"], string> = {
+  none: "Normal",
+  flag: "GbG",
+  pyramid: "GE",
+  medal: "QI",
+};
+
 function Marker({ marker }: { marker: BoostRow["marker"] }) {
-  if (marker === "none") return <div className="h-7 w-7" />;
   return (
     <div className="flex h-7 w-7 items-center justify-center" aria-hidden>
       {marker === "flag" && (
@@ -89,12 +96,17 @@ function Pair({
 
 export function BattleBoosts({ rows }: { rows: BoostRow[] }) {
   return (
-    <section className="space-y-2 pt-3">
+    <section className="space-y-3 pt-3">
       {rows.map((row, i) => (
-        <div key={i} className="flex items-center justify-center gap-4">
-          <Pair atk={row.attAtk} def={row.attDef} tone="atk" />
-          <Marker marker={row.marker} />
-          <Pair atk={row.defAtk} def={row.defDef} tone="def" />
+        <div key={i} className="flex flex-col items-center">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">
+            {CONTEXT[row.marker]}
+          </span>
+          <div className="flex items-center justify-center gap-4">
+            <Pair atk={row.attAtk} def={row.attDef} tone="atk" />
+            <Marker marker={row.marker} />
+            <Pair atk={row.defAtk} def={row.defDef} tone="def" />
+          </div>
         </div>
       ))}
     </section>
