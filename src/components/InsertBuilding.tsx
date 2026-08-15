@@ -1,20 +1,24 @@
 import { useMemo, useState } from "react";
 import { Loader2, Plus, Search } from "lucide-react";
-import type { CatalogBuilding } from "@/lib/boostData";
+import { EraScroller } from "@/components/EraScroller";
+import { ERAS, type CatalogBuilding, type MyBuilding } from "@/lib/boostData";
 
 export function InsertBuilding({
   catalog,
+  owned,
   onAdd,
   pending,
   message,
 }: {
   catalog: CatalogBuilding[];
-  onAdd: (name: string, level: number | null) => void;
+  owned: MyBuilding[];
+  onAdd: (name: string, era: string, quantity: number) => void;
   pending: boolean;
   message: string | null;
 }) {
   const [query, setQuery] = useState("");
-  const [level, setLevel] = useState("");
+  const [era, setEra] = useState<string>(ERAS[6]);
+  const [quantity, setQuantity] = useState("1");
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -36,13 +40,15 @@ export function InsertBuilding({
           />
         </div>
         <input
-          value={level}
-          onChange={(event) => setLevel(event.target.value.replace(/[^\d]/g, ""))}
-          placeholder="Lv"
-          aria-label="Level"
+          value={quantity}
+          onChange={(event) => setQuantity(event.target.value.replace(/[^\d]/g, ""))}
+          placeholder="Qty"
+          aria-label="Quantity"
           className="w-14 rounded-lg border border-primary/50 bg-secondary/60 px-2 py-2 text-center text-sm font-bold tabular-nums outline-none placeholder:text-muted-foreground"
         />
       </div>
+
+      <EraScroller value={era} onChange={setEra} />
 
       {catalog.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-muted-foreground">
@@ -67,7 +73,7 @@ export function InsertBuilding({
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => onAdd(building.name, level === "" ? null : Number(level))}
+                onClick={() => onAdd(building.name, era, Number(quantity) || 1)}
                 className="flex shrink-0 items-center gap-1 rounded-md bg-primary px-2 py-1 text-xs font-bold text-primary-foreground disabled:opacity-60"
               >
                 {pending ? (
@@ -88,6 +94,34 @@ export function InsertBuilding({
       )}
 
       {message && <p className="text-center text-xs font-semibold text-primary">{message}</p>}
+
+      <div className="space-y-1 pt-2">
+        <p className="text-center text-xs font-bold uppercase tracking-wide text-primary">
+          My buildings
+        </p>
+        {owned.length === 0 ? (
+          <p className="px-4 py-3 text-center text-sm text-muted-foreground">
+            Nothing added yet — pick a building, its era and a quantity.
+          </p>
+        ) : (
+          <ul className="space-y-1 text-xs">
+            {owned.map((building, index) => (
+              <li
+                key={`${building.name}-${building.era}-${index}`}
+                className="flex items-center justify-between gap-3 border-b border-def/40 px-1 pb-1"
+              >
+                <span className="min-w-0 flex-1 truncate font-bold capitalize text-foreground">
+                  {building.name}
+                </span>
+                <span className="shrink-0 text-muted-foreground">{building.era || "-"}</span>
+                <span className="w-8 shrink-0 text-right font-bold tabular-nums text-primary">
+                  ×{building.quantity ?? 1}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

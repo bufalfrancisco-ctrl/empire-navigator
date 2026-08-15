@@ -39,6 +39,36 @@ export async function sheetNames() {
   return names;
 }
 
+/** Creates the worksheet (with optional header row) when it does not exist yet. */
+export async function ensureSheet(wanted: string, headers?: string[]) {
+  const existing = await resolveSheet(wanted);
+  if (existing) return existing;
+  await graph(`/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets/add`, {
+    method: "POST",
+    body: { name: wanted },
+  });
+  if (headers?.length) {
+    const end = String.fromCharCode(65 + headers.length - 1);
+    await graph(
+      `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${wanted}')/range(address='A1:${end}1')`,
+      { method: "PATCH", body: { values: [headers] } },
+    );
+  }
+  return wanted;
+}
+
+/** Writes one cell of a worksheet. */
+export async function writeCell(
+  sheetName: string,
+  address: string,
+  value: string | number | null,
+) {
+  await graph(
+    `/me/drive/root:/${WORKBOOK_PATH}:/workbook/worksheets('${sheetName}')/range(address='${address}')`,
+    { method: "PATCH", body: { values: [[value]] } },
+  );
+}
+
 /**
  * Resolves a wanted sheet name case-insensitively; falls back to the first
  * sheet only when `fallbackToFirst` is set.
